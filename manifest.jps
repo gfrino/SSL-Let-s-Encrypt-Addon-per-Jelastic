@@ -1,4 +1,4 @@
-type: install
+type: update
 name: WP Multisite SSL Manager
 id: wp-multisite-ssl-manager
 description: >
