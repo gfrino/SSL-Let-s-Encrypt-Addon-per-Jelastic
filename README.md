@@ -45,22 +45,36 @@ jelastic-wp-multisite-ssl/
 
 ⸻
 
-🚀 Installazione
+🚀 Installazione (addon su ambiente esistente)
 
 1️⃣ Pubblica il repository su GitHub
 
 Il repository deve essere pubblico (consigliato) oppure accessibile via token.
 
-2️⃣ Installa l’addon da Jelastic
+2️⃣ Importa il manifest JPS nell’ambiente
 
-Jelastic → Marketplace → Install from URL
+Nella dashboard di Jelastic, apri l’ambiente e usa Importa → URL (non la scheda JPS).
+Esempio URL raw:
 
-https://github.com/TUO-USER/jelastic-wp-multisite-ssl/raw/main/manifest.jps
+https://raw.githubusercontent.com/TUO-USER/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/manifest.jps
 
 Durante l’installazione:
 	•	viene preparato l’ambiente
 	•	viene installato certbot
 	•	viene configurato il rinnovo automatico SSL
+
+3️⃣ Dove trovi l’addon dopo l’installazione
+
+Lo troverai nei “Componenti aggiuntivi” dell’ambiente come “WP Multisite SSL Manager”.
+Da lì puoi lanciare l’azione “Aggiungi dominio al Multisite”.
+
+Azioni disponibili nell’addon:
+	•	Aggiungi dominio al Multisite
+	•	Lista domini configurati
+	•	Rinnova SSL ora
+
+⚠️ Nota provider: alcuni pannelli (es. Infomaniak) non mostrano “My Addons/Private” nel Marketplace.
+In quel caso l’addon non compare nel catalogo globale, ma è comunque installabile via Importa nell’ambiente.
 
 ⸻
 

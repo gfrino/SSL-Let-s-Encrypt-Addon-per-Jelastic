@@ -7,7 +7,7 @@ description: >
 version: 1.0.0
 
 categories:
-  - apps/dev-tools
+  - addons
 
 onInstall:
   - cmd: bash scripts/install-base.sh
@@ -26,3 +26,9 @@ actions:
         caption: Email per Let’s Encrypt
         required: true
     cmd: bash scripts/add-domain.sh ${domain} ${email}
+  listDomains:
+    caption: Lista domini configurati
+    cmd: bash scripts/list-domains.sh
+  renewNow:
+    caption: Rinnova SSL ora
+    cmd: bash scripts/renew-now.sh
