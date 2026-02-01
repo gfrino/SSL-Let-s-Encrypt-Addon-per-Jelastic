@@ -1,0 +1,30 @@
+type: install
+name: WP Multisite SSL Manager
+id: wp-multisite-ssl-manager
+description: >
+  Gestione domini e SSL Let’s Encrypt per WordPress Multisite su LiteSpeed.
+  Un certificato per dominio, rinnovo automatico.
+version: 1.0.0
+
+categories:
+  - apps/dev-tools
+
+settings:
+  fields:
+    - name: domain
+      type: string
+      caption: Dominio (es. cliente.ch)
+      required: true
+
+    - name: email
+      type: string
+      caption: Email per Let’s Encrypt
+      required: true
+
+onInstall:
+  - cmd: bash scripts/install-base.sh
+
+actions:
+  addDomain:
+    caption: Aggiungi dominio al Multisite
+    cmd: bash scripts/add-domain.sh ${domain} ${email}
