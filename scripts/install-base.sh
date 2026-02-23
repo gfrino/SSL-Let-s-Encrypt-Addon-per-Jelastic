@@ -5,8 +5,15 @@ echo "[INFO] Installazione base SSL manager"
 
 # Certbot
 if ! command -v certbot >/dev/null 2>&1; then
-  yum install -y epel-release
-  yum install -y certbot
+  if command -v dnf >/dev/null 2>&1; then
+    echo "[INFO] Uso dnf per installare certbot"
+    dnf -y install epel-release
+    dnf -y install certbot
+  else
+    echo "[INFO] Uso yum per installare certbot"
+    yum -y install epel-release
+    yum -y install certbot
+  fi
 fi
 
 # Cron renewal
