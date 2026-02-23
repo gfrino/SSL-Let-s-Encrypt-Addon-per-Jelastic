@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+LOG_FILE="/var/log/wp-multisite-ssl-manager.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "[INFO] Avvio add-domain"
+echo "[INFO] User: $(id -u) ($(id -un))"
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "[ERROR] Questo script deve essere eseguito come root"
+  exit 1
+fi
+
 DOMAIN="$1"
 EMAIL="$2"
 
