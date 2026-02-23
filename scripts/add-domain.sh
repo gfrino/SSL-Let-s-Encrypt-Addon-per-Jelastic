@@ -18,6 +18,12 @@ EMAIL="$2"
 DOCROOT="/var/www/webroot/ROOT"
 VHOST_DIR="/var/www/conf/vhosts/$DOMAIN"
 VHOST_CONF="$VHOST_DIR/vhconf.conf"
+TEMPLATE_FILE="${TEMPLATE_FILE:-templates/litespeed-vhost.conf}"
+
+if [ ! -f "$TEMPLATE_FILE" ]; then
+  echo "[ERROR] Template non trovato: $TEMPLATE_FILE"
+  exit 1
+fi
 
 echo "[INFO] Aggiungo dominio $DOMAIN"
 
@@ -34,7 +40,7 @@ certbot certonly \
 mkdir -p "$VHOST_DIR"
 
 cat > "$VHOST_CONF" <<EOF
-$(sed "s|{DOMAIN}|$DOMAIN|g" templates/litespeed-vhost.conf)
+$(sed "s|{DOMAIN}|$DOMAIN|g" "$TEMPLATE_FILE")
 EOF
 
 # Reload LiteSpeed
