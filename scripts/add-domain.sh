@@ -103,12 +103,13 @@ EOF
   add_listener_map 443
 else
   echo "[INFO] Aggiorno config LiteSpeed XML"
-  python3 - <<'PY'
+  LSWS_CONF_PATH="$LSWS_CONF" DOMAIN_NAME="$DOMAIN" python3 - <<'PY'
+import os
 import re
 from pathlib import Path
 
-conf_path = Path("${LSWS_CONF}")
-domain = "${DOMAIN}"
+conf_path = Path(os.environ["LSWS_CONF_PATH"])
+domain = os.environ["DOMAIN_NAME"]
 
 text = conf_path.read_text()
 
@@ -155,10 +156,14 @@ for addr in ["*:80", "[::]:80", "*:443", "[::]:443"]:
     text = add_map_to_listener(text, addr)
 
 conf_path.write_text(text)
+print(f"[INFO] Aggiornato {conf_path}")
 PY
 fi
-
 # Reload LiteSpeed
-systemctl reload lsws
+if [ "$LSWS_CONF_FORMAT" = "xml" ]; then
+  systemctl restart lsws
+else
+  systemctl reload lsws
+fi
 
 echo "[OK] Dominio $DOMAIN configurato con SSL"
