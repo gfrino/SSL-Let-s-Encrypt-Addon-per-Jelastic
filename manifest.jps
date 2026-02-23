@@ -24,7 +24,8 @@
           {
             "cmd": {
               "commands": [
-                "bash scripts/install-base.sh"
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/install-base.sh -o /tmp/wpms-install-base.sh",
+                "bash /tmp/wpms-install-base.sh"
               ],
               "nodeType": "${targetNodes[0].nodeType}",
               "user": "root"
@@ -38,7 +39,9 @@
           {
             "cmd": {
               "commands": [
-                "bash scripts/add-domain.sh ${this.domain} ${this.email}"
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/add-domain.sh -o /tmp/wpms-add-domain.sh",
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.conf -o /tmp/wpms-litespeed-vhost.conf",
+                "TEMPLATE_FILE=/tmp/wpms-litespeed-vhost.conf bash /tmp/wpms-add-domain.sh ${this.domain} ${this.email}"
               ],
               "nodeType": "${targetNodes[0].nodeType}",
               "user": "root"
@@ -52,7 +55,8 @@
           {
             "cmd": {
               "commands": [
-                "bash scripts/list-domains.sh"
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/list-domains.sh -o /tmp/wpms-list-domains.sh",
+                "bash /tmp/wpms-list-domains.sh"
               ],
               "nodeType": "${targetNodes[0].nodeType}",
               "user": "root"
@@ -66,7 +70,8 @@
           {
             "cmd": {
               "commands": [
-                "bash scripts/renew-now.sh"
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/renew-now.sh -o /tmp/wpms-renew-now.sh",
+                "bash /tmp/wpms-renew-now.sh"
               ],
               "nodeType": "${targetNodes[0].nodeType}",
               "user": "root"
