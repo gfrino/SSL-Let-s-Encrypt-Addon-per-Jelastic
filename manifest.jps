@@ -1,34 +1,129 @@
-type: update
-name: WP Multisite SSL Manager
-id: wp-multisite-ssl-manager
-description: >
-  Gestione domini e SSL Let’s Encrypt per WordPress Multisite su LiteSpeed.
-  Un certificato per dominio, rinnovo automatico.
-version: 1.0.0
-
-categories:
-  - addons
-
-onInstall:
-  - cmd: bash scripts/install-base.sh
-
-actions:
-  addDomain:
-    caption: Aggiungi dominio al Multisite
-    fields:
-      - name: domain
-        type: string
-        caption: Dominio (es. cliente.ch)
-        required: true
-
-      - name: email
-        type: string
-        caption: Email per Let’s Encrypt
-        required: true
-    cmd: bash scripts/add-domain.sh ${domain} ${email}
-  listDomains:
-    caption: Lista domini configurati
-    cmd: bash scripts/list-domains.sh
-  renewNow:
-    caption: Rinnova SSL ora
-    cmd: bash scripts/renew-now.sh
+{
+  "jpsVersion": "0.6",
+  "jpsType": "update",
+  "build": "2026022301",
+  "application": {
+    "id": "wp-multisite-ssl-manager",
+    "name": "WP Multisite SSL Manager",
+    "categories": [
+      "apps/dev-and-admin-tools"
+    ],
+    "version": "1.0.0",
+    "homepage": "https://github.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic",
+    "description": {
+      "text": "Gestione domini e SSL Let's Encrypt per WordPress Multisite su LiteSpeed. Un certificato per dominio, rinnovo automatico.",
+      "short": "Gestione SSL per dominio su WordPress Multisite."
+    },
+    "targetNodes": {
+      "nodeType": "*"
+    },
+    "procedures": [
+      {
+        "id": "installBase",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "bash scripts/install-base.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
+        "id": "addDomain",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "bash scripts/add-domain.sh ${this.domain} ${this.email}"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
+        "id": "listDomains",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "bash scripts/list-domains.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
+        "id": "renewNow",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "bash scripts/renew-now.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      }
+    ],
+    "menu": [
+      {
+        "caption": "Installa base (certbot + cron)",
+        "confirmText": "Avvia installazione",
+        "loadingText": "Installazione base...",
+        "procedure": "installBase",
+        "successText": "Installazione base completata"
+      },
+      {
+        "caption": "Aggiungi dominio al Multisite",
+        "settings": "addDomain",
+        "confirmText": "Aggiungi dominio",
+        "loadingText": "Configurazione dominio...",
+        "procedure": "addDomain",
+        "successText": "Dominio configurato con SSL"
+      },
+      {
+        "caption": "Lista domini configurati",
+        "loadingText": "Recupero domini...",
+        "procedure": "listDomains",
+        "successText": "Lista domini completata"
+      },
+      {
+        "caption": "Rinnova SSL ora",
+        "loadingText": "Rinnovo certificati...",
+        "procedure": "renewNow",
+        "successText": "Rinnovo completato"
+      }
+    ],
+    "settings": {
+      "addDomain": {
+        "fields": [
+          {
+            "name": "domain",
+            "type": "string",
+            "caption": "Dominio (es. cliente.ch)",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "caption": "Email per Let's Encrypt",
+            "required": true
+          }
+        ]
+      }
+    },
+    "success": {
+      "text": "Apri Add-ons sul nodo e usa il menu per aggiungere domini o rinnovare SSL."
+    }
+  }
+}
