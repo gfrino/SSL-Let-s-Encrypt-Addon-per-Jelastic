@@ -69,6 +69,7 @@ Lo troverai nei “Componenti aggiuntivi” dell’ambiente come “WP Multisite
 Da lì puoi lanciare l’azione “Aggiungi dominio al Multisite”.
 
 Azioni disponibili nell’addon:
+	•	Installa base (certbot + cron)
 	•	Aggiungi dominio al Multisite
 	•	Lista domini configurati
 	•	Rinnova SSL ora
