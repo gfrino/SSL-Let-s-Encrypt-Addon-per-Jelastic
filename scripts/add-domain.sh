@@ -137,11 +137,40 @@ def add_map_to_listener(xml, address):
         return match.group(1) + body + map_block + match.group(3)
     new_xml, count = re.subn(pattern, repl, xml, count=1, flags=re.S)
     if count == 0:
-        raise SystemExit(f"[ERROR] Listener {address} non trovato nel file XML")
+        print(f"[WARN] Listener {address} non trovato nel file XML, salto")
+    return new_xml
+
+def add_sni_cert_to_listener(xml, address):
+    """Aggiunge il cert del dominio alla certList del listener HTTPS per SNI."""
+    key_file = f"/etc/letsencrypt/live/{domain}/privkey.pem"
+    cert_file = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
+    cert_entry = f"<cert><keyFile>{key_file}</keyFile><certFile>{cert_file}</certFile><CA></CA></cert>"
+
+    # Trova il listener con questo address e modifica il suo blocco <ssl>
+    pattern = (
+        r"(<listener>)(.*?<address>" + re.escape(address) + r"</address>.*?)(<ssl>)(.*?)(</ssl>)(.*?</listener>)"
+    )
+
+    def repl_ssl(match):
+        ssl_content = match.group(4)
+        if key_file in ssl_content:
+            return match.group(0)  # già presente
+        if "<certList>" in ssl_content:
+            ssl_content = ssl_content.replace("</certList>", cert_entry + "</certList>")
+        else:
+            ssl_content += f"<certList>{cert_entry}</certList>"
+        return match.group(1) + match.group(2) + match.group(3) + ssl_content + match.group(5) + match.group(6)
+
+    new_xml, count = re.subn(pattern, repl_ssl, xml, count=1, flags=re.S)
+    if count == 0:
+        print(f"[WARN] Listener HTTPS {address} senza blocco ssl, salto SNI cert")
     return new_xml
 
 for addr in ["*:80", "[::]:80", "*:443", "[::]:443"]:
     text = add_map_to_listener(text, addr)
+
+for addr in ["*:443", "[::]:443"]:
+    text = add_sni_cert_to_listener(text, addr)
 
 conf_path.write_text(text)
 print(f"[INFO] Aggiornato {conf_path}")

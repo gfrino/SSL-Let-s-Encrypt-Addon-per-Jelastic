@@ -85,6 +85,17 @@ text = re.sub(
     flags=re.S,
 )
 
+# Rimuove la SNI cert del dominio da tutti i listener HTTPS
+text = re.sub(
+    r"<cert><keyFile>/etc/letsencrypt/live/" + re.escape(domain) + r"/privkey\.pem</keyFile>.*?</cert>",
+    "",
+    text,
+    flags=re.S,
+)
+
+# Rimuove certList vuote rimaste
+text = re.sub(r"<certList>\s*</certList>", "", text, flags=re.S)
+
 conf_path.write_text(text)
 print(f"[INFO] Aggiornato {conf_path}")
 PY
