@@ -50,6 +50,21 @@
         ]
       },
       {
+        "id": "removeDomain",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/remove-domain.sh -o /tmp/wpms-remove-domain.sh",
+                "bash /tmp/wpms-remove-domain.sh ${this.domain}"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
         "id": "listDomains",
         "onCall": [
           {
@@ -78,6 +93,21 @@
             }
           }
         ]
+      },
+      {
+        "id": "uninstallAddon",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/uninstall-addon.sh -o /tmp/wpms-uninstall-addon.sh",
+                "bash /tmp/wpms-uninstall-addon.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
       }
     ],
     "menu": [
@@ -97,6 +127,14 @@
         "successText": "Dominio configurato con SSL"
       },
       {
+        "caption": "Rimuovi dominio",
+        "settings": "removeDomain",
+        "confirmText": "Rimuovi dominio",
+        "loadingText": "Rimozione dominio...",
+        "procedure": "removeDomain",
+        "successText": "Dominio rimosso"
+      },
+      {
         "caption": "Lista domini configurati",
         "loadingText": "Recupero domini...",
         "procedure": "listDomains",
@@ -107,6 +145,13 @@
         "loadingText": "Rinnovo certificati...",
         "procedure": "renewNow",
         "successText": "Rinnovo completato"
+      },
+      {
+        "caption": "Disinstalla (pulizia completa)",
+        "confirmText": "Conferma disinstallazione",
+        "loadingText": "Pulizia in corso...",
+        "procedure": "uninstallAddon",
+        "successText": "Disinstallazione completata"
       }
     ],
     "settings": {
@@ -115,13 +160,23 @@
           {
             "name": "domain",
             "type": "string",
-            "caption": "Dominio (es. cliente.ch)",
+            "caption": "Domini (separati da virgola o spazio)",
             "required": true
           },
           {
             "name": "email",
             "type": "string",
             "caption": "Email per Let's Encrypt",
+            "required": true
+          }
+        ]
+      },
+      "removeDomain": {
+        "fields": [
+          {
+            "name": "domain",
+            "type": "string",
+            "caption": "Domini da rimuovere (separati da virgola o spazio)",
             "required": true
           }
         ]

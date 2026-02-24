@@ -12,12 +12,15 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-DOMAIN="$1"
+RAW_DOMAINS="$1"
 EMAIL="$2"
 
+if [ -z "$RAW_DOMAINS" ] || [ -z "$EMAIL" ]; then
+  echo "[ERROR] Parametri mancanti: domain/email"
+  exit 1
+fi
+
 DOCROOT="/var/www/webroot/ROOT"
-VHOST_DIR="/var/www/conf/vhosts/$DOMAIN"
-VHOST_CONF="$VHOST_DIR/vhconf.conf"
 TEMPLATE_FILE="${TEMPLATE_FILE:-templates/litespeed-vhost.conf}"
 
 LSWS_CONF=""
@@ -44,32 +47,23 @@ if [ ! -f "$TEMPLATE_FILE" ]; then
   exit 1
 fi
 
-echo "[INFO] Aggiungo dominio $DOMAIN"
+DOMAINS=$(echo "$RAW_DOMAINS" | tr ',;' '  ' | xargs)
+if [ -z "$DOMAINS" ]; then
+  echo "[ERROR] Nessun dominio valido"
+  exit 1
+fi
 
-# Certificato LE
-certbot certonly \
-  --webroot \
-  -w $DOCROOT \
-  -d $DOMAIN \
-  --email $EMAIL \
-  --agree-tos \
-  --non-interactive
+NEED_RESTART=0
 
-# VHost
-mkdir -p "$VHOST_DIR"
+update_conf_conf() {
+  local domain="$1"
 
-cat > "$VHOST_CONF" <<EOF
-$(sed "s|{DOMAIN}|$DOMAIN|g" "$TEMPLATE_FILE")
-EOF
-
-if [ "$LSWS_CONF_FORMAT" = "conf" ]; then
-  # Registra il vhost nel file di configurazione principale se mancante
-  if ! grep -q "^virtualhost[[:space:]]\+$DOMAIN\b" "$LSWS_CONF"; then
+  if ! grep -q "^virtualhost[[:space:]]\+$domain\b" "$LSWS_CONF"; then
     cat >> "$LSWS_CONF" <<EOF
 
-virtualhost $DOMAIN {
+virtualhost $domain {
   vhRoot                  /var/www
-  configFile              /var/www/conf/vhosts/$DOMAIN/vhconf.conf
+  configFile              /var/www/conf/vhosts/$domain/vhconf.conf
   allowSymbolLink         1
   enableScript            1
   restrained              1
@@ -77,33 +71,27 @@ virtualhost $DOMAIN {
 EOF
   fi
 
-  add_listener_map() {
-    local port="$1"
-    local tmp
-    tmp="$(mktemp)"
-    awk -v domain="$DOMAIN" -v port="$port" '
-      BEGIN {in_listener=0; addr_match=0; has_map=0}
-      /^listener[ \t]+/ {in_listener=1; addr_match=0; has_map=0}
-      in_listener && $1=="address" && $2~":"port"$" {addr_match=1}
-      in_listener && $1=="map" && $2==domain {has_map=1}
-      in_listener && addr_match && /^[ \t]*}/ {
-        if (!has_map) print "  map                    " domain " " domain
-        print $0
-        in_listener=0; addr_match=0; has_map=0
-        next
-      }
-      in_listener && /^[ \t]*}/ {
-        in_listener=0; addr_match=0; has_map=0
-      }
-      {print}
-    ' "$LSWS_CONF" > "$tmp" && mv "$tmp" "$LSWS_CONF"
-  }
+  local tmp
+  tmp="$(mktemp)"
+  awk -v domain="$domain" '
+    BEGIN {in_listener=0; has_map=0}
+    /^listener[ \t]+/ {in_listener=1; has_map=0}
+    in_listener && $1=="map" && $2==domain {has_map=1}
+    in_listener && /^[ \t]*}/ {
+      if (!has_map) print "  map                    " domain " " domain
+      print $0
+      in_listener=0; has_map=0
+      next
+    }
+    in_listener && /^[ \t]*}/ {in_listener=0; has_map=0}
+    {print}
+  ' "$LSWS_CONF" > "$tmp" && mv "$tmp" "$LSWS_CONF"
+}
 
-  add_listener_map 80
-  add_listener_map 443
-else
-  echo "[INFO] Aggiorno config LiteSpeed XML"
-  LSWS_CONF_PATH="$LSWS_CONF" DOMAIN_NAME="$DOMAIN" python3 - <<'PY'
+update_conf_xml() {
+  local domain="$1"
+
+  LSWS_CONF_PATH="$LSWS_CONF" DOMAIN_NAME="$domain" python3 - <<'PY'
 import os
 import re
 from pathlib import Path
@@ -158,12 +146,46 @@ for addr in ["*:80", "[::]:80", "*:443", "[::]:443"]:
 conf_path.write_text(text)
 print(f"[INFO] Aggiornato {conf_path}")
 PY
-fi
-# Reload LiteSpeed
-if [ "$LSWS_CONF_FORMAT" = "xml" ]; then
+}
+
+for domain in $DOMAINS; do
+  if [ -z "$domain" ]; then
+    continue
+  fi
+
+  echo "[INFO] Aggiungo dominio $domain"
+
+  certbot certonly \
+    --webroot \
+    -w "$DOCROOT" \
+    -d "$domain" \
+    --cert-name "$domain" \
+    --email "$EMAIL" \
+    --agree-tos \
+    --non-interactive
+
+  VHOST_DIR="/var/www/conf/vhosts/$domain"
+  VHOST_CONF="$VHOST_DIR/vhconf.conf"
+
+  mkdir -p "$VHOST_DIR"
+
+  cat > "$VHOST_CONF" <<EOF
+$(sed "s|{DOMAIN}|$domain|g" "$TEMPLATE_FILE")
+EOF
+
+  if [ "$LSWS_CONF_FORMAT" = "conf" ]; then
+    update_conf_conf "$domain"
+  else
+    update_conf_xml "$domain"
+    NEED_RESTART=1
+  fi
+
+done
+
+if [ "$LSWS_CONF_FORMAT" = "xml" ] && [ "$NEED_RESTART" -eq 1 ]; then
   systemctl restart lsws
 else
   systemctl reload lsws
 fi
 
-echo "[OK] Dominio $DOMAIN configurato con SSL"
+echo "[OK] Domini configurati con SSL"

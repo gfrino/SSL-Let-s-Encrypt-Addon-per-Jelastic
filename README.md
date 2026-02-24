@@ -71,8 +71,10 @@ Da lì puoi lanciare l’azione “Aggiungi dominio al Multisite”.
 Azioni disponibili nell’addon:
 	•	Installa base (certbot + cron)
 	•	Aggiungi dominio al Multisite
+	•	Rimuovi dominio
 	•	Lista domini configurati
 	•	Rinnova SSL ora
+	•	Disinstalla (pulizia completa)
 
 ⚠️ Nota provider: alcuni pannelli (es. Infomaniak) non mostrano “My Addons/Private” nel Marketplace.
 In quel caso l’addon non compare nel catalogo globale, ma è comunque installabile via Importa nell’ambiente.
@@ -84,7 +86,7 @@ In quel caso l’addon non compare nel catalogo globale, ma è comunque installa
 Ogni volta che aggiungi un sito al WordPress Multisite:
 	1.	Apri l’addon WP Multisite SSL Manager
 	2.	Inserisci:
-	•	Dominio (es. cliente.ch)
+	•	Domini (es. cliente.ch, esempio.com) separati da virgola o spazio
 	•	Email per Let’s Encrypt
 	3.	Conferma
 
