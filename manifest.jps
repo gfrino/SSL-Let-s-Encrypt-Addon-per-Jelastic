@@ -110,6 +110,21 @@
         ]
       },
       {
+        "id": "reapplySsl",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/reapply-ssl.sh -o /tmp/wpms-reapply-ssl.sh",
+                "bash /tmp/wpms-reapply-ssl.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
         "id": "uninstallAddon",
         "onCall": [
           {
@@ -154,6 +169,13 @@
         "loadingText": "Recupero domini...",
         "procedure": "listDomains",
         "successText": "Lista domini completata"
+      },
+      {
+        "caption": "Applica SSL ai domini configurati",
+        "confirmText": "Riapplica configurazione SSL",
+        "loadingText": "Applicazione configurazione SSL...",
+        "procedure": "reapplySsl",
+        "successText": "Configurazione SSL applicata"
       },
       {
         "caption": "Rinnova SSL ora",
