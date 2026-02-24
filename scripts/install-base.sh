@@ -22,3 +22,8 @@ if ! crontab -l | grep -q "certbot renew"; then
 fi
 
 mkdir -p /var/www/conf/vhosts
+
+# Crea il file di log se non esiste (così appare nel pannello Jelastic)
+LOG_FILE="/var/log/wp-multisite-ssl-manager.log"
+touch "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] SSL Manager installato" >> "$LOG_FILE"
