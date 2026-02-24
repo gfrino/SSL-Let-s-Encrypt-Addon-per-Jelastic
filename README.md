@@ -74,6 +74,7 @@ Azioni disponibili nell’addon:
 	•	Rimuovi dominio
 	•	Lista domini configurati
 	•	Rinnova SSL ora
+	•	Stato rinnovo
 	•	Disinstalla (pulizia completa)
 
 ⚠️ Nota provider: alcuni pannelli (es. Infomaniak) non mostrano “My Addons/Private” nel Marketplace.

@@ -95,6 +95,21 @@
         ]
       },
       {
+        "id": "renewStatus",
+        "onCall": [
+          {
+            "cmd": {
+              "commands": [
+                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/renew-status.sh -o /tmp/wpms-renew-status.sh",
+                "bash /tmp/wpms-renew-status.sh"
+              ],
+              "nodeType": "${targetNodes[0].nodeType}",
+              "user": "root"
+            }
+          }
+        ]
+      },
+      {
         "id": "uninstallAddon",
         "onCall": [
           {
@@ -145,6 +160,12 @@
         "loadingText": "Rinnovo certificati...",
         "procedure": "renewNow",
         "successText": "Rinnovo completato"
+      },
+      {
+        "caption": "Stato rinnovo",
+        "loadingText": "Verifica stato rinnovo...",
+        "procedure": "renewStatus",
+        "successText": "Verifica completata"
       },
       {
         "caption": "Disinstalla (pulizia completa)",
