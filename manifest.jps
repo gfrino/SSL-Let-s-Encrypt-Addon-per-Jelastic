@@ -40,8 +40,7 @@
             "cmd": {
               "commands": [
                 "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/scripts/add-domain.sh -o /tmp/wpms-add-domain.sh",
-                "curl -fsSL https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.conf -o /tmp/wpms-litespeed-vhost.conf",
-                "TEMPLATE_FILE=/tmp/wpms-litespeed-vhost.conf bash /tmp/wpms-add-domain.sh ${this.domain} ${this.email}"
+                "bash /tmp/wpms-add-domain.sh ${this.domain} ${this.email}"
               ],
               "nodeType": "${targetNodes[0].nodeType}",
               "user": "root"
