@@ -131,6 +131,7 @@ vhost_entry = f"""
     <setUIDMode>2</setUIDMode>
   </virtualHost>"""
 
+# Add virtualHost to virtualHostList
 if f"<name>{domain}</name>" in text:
     print(f"[INFO] vHost {domain} già presente in XML")
 else:
@@ -139,27 +140,45 @@ else:
     else:
         text = text.replace("</httpServerConfig>", f"<virtualHostList>{vhost_entry}\n</virtualHostList>\n</httpServerConfig>")
     conf_path.write_text(text)
+    text = conf_path.read_text()  # Reload after save
     print(f"[INFO] vHost {domain} aggiunto a XML")
 
-# Add vHost mapping to listeners
-for addr in ["*:443 SSL", "*:80"]:
-    listener_pattern = r"(<listener>.*?<name>" + re.escape(addr.split()[0]) + r"</name>.*?</listener>)"
+# Add vHost mapping to listeners by searching for address patterns
+mapping_entry = f"<map><virtualHost>{domain}</virtualHost><domains>{domain}</domains></map>"
+listeners_to_map = [
+    (r'\*:443', '443 SSL'),
+    (r'\[::\]:443', '443 SSL IPv6'),
+    (r'\*:80', '80 HTTP'),
+    (r'\[::\]:80', '80 HTTP IPv6')
+]
+
+for addr_pattern, desc in listeners_to_map:
+    # Find listener by address tag
+    listener_pattern = r'(<listener>.*?<address>' + addr_pattern + r'</address>.*?</listener>)'
     m = re.search(listener_pattern, text, flags=re.S)
     if not m:
+        print(f"[INFO] Listener {desc} ({addr_pattern}) non trovato, salto")
         continue
+    
     block = m.group(1)
-    mapping = f"<map><virtualHost>{domain}</virtualHost><domains>{domain}</domains></map>"
+    
+    # Check if mapping already exists
     if f"<virtualHost>{domain}</virtualHost>" in block:
-        print(f"[INFO] Mapping {domain} già presente in listener {addr}")
+        print(f"[INFO] Mapping {domain} già presente in listener {desc}")
         continue
+    
+    # Add mapping
     if "<vhostMapList>" in block:
-        new_block = block.replace("</vhostMapList>", mapping + "</vhostMapList>")
+        new_block = block.replace("</vhostMapList>", mapping_entry + "</vhostMapList>")
     else:
-        new_block = block.replace("</listener>", f"<vhostMapList>{mapping}</vhostMapList></listener>")
+        new_block = block.replace("</listener>", f"<vhostMapList>{mapping_entry}</vhostMapList></listener>")
+    
     text = text[:m.start()] + new_block + text[m.end():]
-    print(f"[INFO] Mapping {domain} aggiunto a listener {addr}")
+    print(f"[INFO] Mapping {domain} aggiunto a listener {desc}")
 
+# Save final config
 conf_path.write_text(text)
+print(f"[OK] Configurazione XML salvata")
 PYVHOST
 
 done
