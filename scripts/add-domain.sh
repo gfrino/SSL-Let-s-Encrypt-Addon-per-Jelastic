@@ -1,14 +1,19 @@
 #!/bin/bash
 set -e
 
+# Funzione per log con timestamp
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
 LOG_FILE="/var/log/wp-multisite-ssl-manager.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-echo "[INFO] Avvio add-domain"
-echo "[INFO] User: $(id -u) ($(id -un))"
+log "[INFO] Avvio add-domain"
+log "[INFO] User: $(id -u) ($(id -un))"
 
 if [ "$(id -u)" -ne 0 ]; then
-  echo "[ERROR] Questo script deve essere eseguito come root"
+  log "[ERROR] Questo script deve essere eseguito come root"
   exit 1
 fi
 
@@ -16,9 +21,12 @@ RAW_DOMAINS="$1"
 EMAIL="$2"
 
 if [ -z "$RAW_DOMAINS" ] || [ -z "$EMAIL" ]; then
-  echo "[ERROR] Parametri mancanti: domain/email"
+  log "[ERROR] Parametri mancanti: domain/email"
   exit 1
 fi
+
+log "[DEBUG] Input domini: '$RAW_DOMAINS'"
+log "[DEBUG] Email: '$EMAIL'"
 
 DOCROOT="/var/www/webroot/ROOT"
 
@@ -27,15 +35,18 @@ if [ -f "/var/www/conf/httpd_config.xml" ]; then
 elif [ -f "/usr/local/lsws/conf/httpd_config.xml" ]; then
   LSWS_CONF="/usr/local/lsws/conf/httpd_config.xml"
 else
-  echo "[ERROR] Config LiteSpeed XML non trovata"
+  log "[ERROR] Config LiteSpeed XML non trovata"
   exit 1
 fi
 
 DOMAINS=$(echo "$RAW_DOMAINS" | tr ',;' '  ' | xargs)
 if [ -z "$DOMAINS" ]; then
-  echo "[ERROR] Nessun dominio valido"
+  log "[ERROR] Nessun dominio valido"
   exit 1
 fi
+
+log "[DEBUG] Domini parsati: '$DOMAINS'"
+log "[DEBUG] Numero domini: $(echo $DOMAINS | wc -w)"
 
 add_sni_cert() {
   local domain="$1"
@@ -79,7 +90,7 @@ PY
 for domain in $DOMAINS; do
   [ -z "$domain" ] && continue
 
-  echo "[INFO] Aggiungo dominio $domain"
+  log "[INFO] Aggiungo dominio $domain"
 
   certbot certonly \
     --webroot \
@@ -93,23 +104,23 @@ for domain in $DOMAINS; do
   VHOST_DIR="/var/www/conf/vhosts/$domain"
   VHOST_CONF="$VHOST_DIR/vhconf.xml"
   
-  echo "[INFO] Creo vHost per $domain in $VHOST_CONF"
+  log "[INFO] Creo vHost per $domain in $VHOST_CONF"
   mkdir -p "$VHOST_DIR"
   
   TEMPLATE_URL="https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.xml"
-  echo "[INFO] Scarico template vHost XML da GitHub"
+  log "[INFO] Scarico template vHost XML da GitHub"
   curl -fsSL "$TEMPLATE_URL" | sed "s/{DOMAIN}/$domain/g" > "$VHOST_CONF"
   
   if [ ! -s "$VHOST_CONF" ]; then
-    echo "[ERROR] Errore creazione vHost conf"
+    log "[ERROR] Errore creazione vHost conf"
     exit 1
   fi
   
-  echo "[INFO] vHost conf creato: $VHOST_CONF"
+  log "[INFO] vHost conf creato: $VHOST_CONF"
 
   add_sni_cert "$domain"
   
-  echo "[INFO] Aggiungo vHost $domain alla config XML"
+  log "[INFO] Aggiungo vHost $domain alla config XML"
   LSWS_CONF_PATH="$LSWS_CONF" DOMAIN_NAME="$domain" VHOST_CONF_PATH="$VHOST_CONF" python3 - <<'PYVHOST'
 import os
 import re
@@ -196,4 +207,4 @@ done
 
 sudo su -c "systemctl restart lshttpd" 2>/dev/null || systemctl restart lshttpd 2>/dev/null || true
 
-echo "[OK] Domini configurati con SSL"
+log "[OK] Domini configurati con SSL"
