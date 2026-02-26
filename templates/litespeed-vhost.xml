@@ -2,7 +2,6 @@
 <virtualHostConfig>
   <docRoot>/var/www/webroot/ROOT</docRoot>
   <enableGzip>1</enableGzip>
-  <vhDomain>{DOMAIN}</vhDomain>
   
   <security>
     <accessControl>
@@ -18,11 +17,5 @@
   </vhssl>
   
   <contextList>
-    <context>
-      <type>proxy</type>
-      <uri>/</uri>
-      <handler>http://127.0.0.1:8080</handler>
-      <addDefaultCharset>off</addDefaultCharset>
-    </context>
   </contextList>
 </virtualHostConfig>

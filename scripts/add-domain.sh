@@ -91,13 +91,13 @@ for domain in $DOMAINS; do
     --non-interactive
 
   VHOST_DIR="/var/www/conf/vhosts/$domain"
-  VHOST_CONF="$VHOST_DIR/vhconf.conf"
+  VHOST_CONF="$VHOST_DIR/vhconf.xml"
   
   echo "[INFO] Creo vHost per $domain in $VHOST_CONF"
   mkdir -p "$VHOST_DIR"
   
-  TEMPLATE_URL="https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.conf"
-  echo "[INFO] Scarico template vHost da GitHub"
+  TEMPLATE_URL="https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.xml"
+  echo "[INFO] Scarico template vHost XML da GitHub"
   curl -fsSL "$TEMPLATE_URL" | sed "s/{DOMAIN}/$domain/g" > "$VHOST_CONF"
   
   if [ ! -s "$VHOST_CONF" ]; then
@@ -143,38 +143,49 @@ else:
     text = conf_path.read_text()  # Reload after save
     print(f"[INFO] vHost {domain} aggiunto a XML")
 
-# Add vHost mapping to listeners by searching for address patterns
-mapping_entry = f"<map><virtualHost>{domain}</virtualHost><domains>{domain}</domains></map>"
-listeners_to_map = [
-    (r'\*:443', '443 SSL'),
-    (r'\[::\]:443', '443 SSL IPv6'),
-    (r'\*:80', '80 HTTP'),
-    (r'\[::\]:80', '80 HTTP IPv6')
-]
+# Add vHost mapping to listeners - HTTPS mappings must be BEFORE wildcard!
+mapping_entry = f"<vhostMap><vhost>{domain}</vhost><domain>{domain}</domain></vhostMap>"
 
-for addr_pattern, desc in listeners_to_map:
-    # Find listener by address tag
+# Process HTTPS listeners (*:443 and [::]:443) - insert BEFORE Jelastic wildcard
+for addr_pattern in [r'\*:443', r'\[::\]:443']:
+    listener_pattern = r'(<listener>.*?<address>' + addr_pattern + r'</address>.*?<vhostMapList>)(.*?)(</vhostMapList>)'
+    m = re.search(listener_pattern, text, flags=re.S)
+    if not m:
+        print(f"[INFO] Listener HTTPS {addr_pattern} non trovato")
+        continue
+    
+    before = m.group(1)
+    vhost_maps = m.group(2)
+    after = m.group(3)
+    
+    if f"<vhost>{domain}</vhost>" in vhost_maps:
+        print(f"[INFO] Mapping {domain} già presente in HTTPS {addr_pattern}")
+        continue
+    
+    # Insert mapping BEFORE any wildcard mapping (must match specific domains first!)
+    new_vhost_maps = mapping_entry + vhost_maps
+    text = text[:m.start()] + before + new_vhost_maps + after + text[m.end():]
+    print(f"[INFO] Mapping {domain} aggiunto all'inizio di HTTPS {addr_pattern}")
+
+# Process HTTP listeners (*:80 and [::]:80) - can be appended
+for addr_pattern in [r'\*:80', r'\[::\]:80']:
     listener_pattern = r'(<listener>.*?<address>' + addr_pattern + r'</address>.*?</listener>)'
     m = re.search(listener_pattern, text, flags=re.S)
     if not m:
-        print(f"[INFO] Listener {desc} ({addr_pattern}) non trovato, salto")
         continue
     
     block = m.group(1)
-    
-    # Check if mapping already exists
-    if f"<virtualHost>{domain}</virtualHost>" in block:
-        print(f"[INFO] Mapping {domain} già presente in listener {desc}")
+    if f"<vhost>{domain}</vhost>" in block:
+        print(f"[INFO] Mapping {domain} già presente in HTTP {addr_pattern}")
         continue
     
-    # Add mapping
     if "<vhostMapList>" in block:
         new_block = block.replace("</vhostMapList>", mapping_entry + "</vhostMapList>")
     else:
         new_block = block.replace("</listener>", f"<vhostMapList>{mapping_entry}</vhostMapList></listener>")
     
     text = text[:m.start()] + new_block + text[m.end():]
-    print(f"[INFO] Mapping {domain} aggiunto a listener {desc}")
+    print(f"[INFO] Mapping {domain} aggiunto a HTTP {addr_pattern}")
 
 # Save final config
 conf_path.write_text(text)

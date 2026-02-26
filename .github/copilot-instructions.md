@@ -8,14 +8,16 @@
 ## Key components and data flow
 - [manifest.jps](manifest.jps) defines user inputs (`domain`, `email`) and maps actions to scripts.
 - [scripts/install-base.sh](scripts/install-base.sh) installs certbot (yum/epel) and configures cron renewal + LiteSpeed reload.
-- [scripts/add-domain.sh](scripts/add-domain.sh) uses certbot `--webroot` with `DOCROOT=/var/www/webroot/ROOT`, writes vHost at `/var/www/conf/vhosts/$DOMAIN/vhconf.conf`, then reloads `lsws`.
-- [templates/litespeed-vhost.conf](templates/litespeed-vhost.conf) is a template with `{DOMAIN}` placeholder; it is substituted via `sed` in `add-domain.sh`.
+- [scripts/add-domain.sh](scripts/add-domain.sh) uses certbot `--webroot` with `DOCROOT=/var/www/webroot/ROOT`, writes vHost XML at `/var/www/conf/vhosts/$DOMAIN/vhconf.xml`, then reloads `lsws`.
+- [templates/litespeed-vhost.xml](templates/litespeed-vhost.xml) is an XML template with `{DOMAIN}` placeholder; it is substituted via `sed` in `add-domain.sh`.
+- **CRITICAL**: vHost mapping in HTTPS listeners MUST be placed BEFORE the Jelastic wildcard mapping to ensure SNI works correctly.
 
 ## Conventions specific to this project
 - All paths are hard-coded for the Jelastic/LiteSpeed layout (e.g., `/var/www/conf/vhosts`, `/var/www/webroot/ROOT`). Keep these consistent unless the change is intentional.
-- vHost creation uses a simple text template; update the template rather than inlining config in the script.
+- vHost creation uses an XML template (LiteSpeed 6.x format); update the template rather than inlining config in the script.
 - Placeholder format is `{DOMAIN}`; if you add new placeholders, keep the same `{NAME}` style and update the `sed` logic.
 - The addon assumes a CentOS/RHEL-like environment (`yum`, `systemctl`). Avoid Debian-specific tooling unless you also add compatibility logic.
+- **IMPORTANT**: In HTTPS listeners, specific domain mappings must appear BEFORE wildcard (*) mappings for SNI to route correctly.
 
 ## Developer workflows
 - Installation and actions are executed by Jelastic from the manifest; there is no local build/test pipeline in this repo.
