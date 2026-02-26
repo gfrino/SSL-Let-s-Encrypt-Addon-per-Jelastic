@@ -202,7 +202,7 @@
           {
             "name": "domain",
             "type": "string",
-            "caption": "Domini (separati da virgola o spazio)",
+            "caption": "Domini (separati da virgola)",
             "required": true
           },
           {
@@ -218,7 +218,7 @@
           {
             "name": "domain",
             "type": "string",
-            "caption": "Domini da rimuovere (separati da virgola o spazio)",
+            "caption": "Domini da rimuovere (separati da virgola)",
             "required": true
           }
         ]
