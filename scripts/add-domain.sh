@@ -90,7 +90,77 @@ for domain in $DOMAINS; do
     --agree-tos \
     --non-interactive
 
+  VHOST_DIR="/var/www/conf/vhosts/$domain"
+  VHOST_CONF="$VHOST_DIR/vhconf.conf"
+  
+  echo "[INFO] Creo vHost per $domain in $VHOST_CONF"
+  mkdir -p "$VHOST_DIR"
+  
+  TEMPLATE_URL="https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/templates/litespeed-vhost.conf"
+  echo "[INFO] Scarico template vHost da GitHub"
+  curl -fsSL "$TEMPLATE_URL" | sed "s/{DOMAIN}/$domain/g" > "$VHOST_CONF"
+  
+  if [ ! -s "$VHOST_CONF" ]; then
+    echo "[ERROR] Errore creazione vHost conf"
+    exit 1
+  fi
+  
+  echo "[INFO] vHost conf creato: $VHOST_CONF"
+
   add_sni_cert "$domain"
+  
+  echo "[INFO] Aggiungo vHost $domain alla config XML"
+  LSWS_CONF_PATH="$LSWS_CONF" DOMAIN_NAME="$domain" VHOST_CONF_PATH="$VHOST_CONF" python3 - <<'PYVHOST'
+import os
+import re
+from pathlib import Path
+
+conf_path = Path(os.environ["LSWS_CONF_PATH"])
+domain = os.environ["DOMAIN_NAME"]
+vhost_conf = os.environ["VHOST_CONF_PATH"]
+text = conf_path.read_text()
+
+vhost_entry = f"""
+  <virtualHost>
+    <name>{domain}</name>
+    <vhRoot>/var/www/conf/vhosts/{domain}</vhRoot>
+    <configFile>{vhost_conf}</configFile>
+    <allowSymbolLink>1</allowSymbolLink>
+    <enableScript>1</enableScript>
+    <restrained>1</restrained>
+    <setUIDMode>2</setUIDMode>
+  </virtualHost>"""
+
+if f"<name>{domain}</name>" in text:
+    print(f"[INFO] vHost {domain} già presente in XML")
+else:
+    if "<virtualHostList>" in text:
+        text = text.replace("</virtualHostList>", vhost_entry + "\n</virtualHostList>")
+    else:
+        text = text.replace("</httpServerConfig>", f"<virtualHostList>{vhost_entry}\n</virtualHostList>\n</httpServerConfig>")
+    conf_path.write_text(text)
+    print(f"[INFO] vHost {domain} aggiunto a XML")
+
+# Add vHost mapping to listeners
+for addr in ["*:443 SSL", "*:80"]:
+    listener_pattern = r"(<listener>.*?<name>" + re.escape(addr.split()[0]) + r"</name>.*?</listener>)"
+    m = re.search(listener_pattern, text, flags=re.S)
+    if not m:
+        continue
+    block = m.group(1)
+    mapping = f"<map><virtualHost>{domain}</virtualHost><domains>{domain}</domains></map>"
+    if f"<virtualHost>{domain}</virtualHost>" in block:
+        print(f"[INFO] Mapping {domain} già presente in listener {addr}")
+        continue
+    if "<vhostMapList>" in block:
+        new_block = block.replace("</vhostMapList>", mapping + "</vhostMapList>")
+    else:
+        new_block = block.replace("</listener>", f"<vhostMapList>{mapping}</vhostMapList></listener>")
+    text = text[:m.start()] + new_block + text[m.end():]
+    print(f"[INFO] Mapping {domain} aggiunto a listener {addr}")
+
+conf_path.write_text(text)
+PYVHOST
 
 done
 
