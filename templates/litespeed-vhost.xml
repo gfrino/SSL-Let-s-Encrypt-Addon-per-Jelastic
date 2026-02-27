@@ -3,6 +3,17 @@
   <docRoot>/var/www/webroot/ROOT</docRoot>
   <enableGzip>1</enableGzip>
   
+  <index>
+    <useServer>0</useServer>
+    <indexFiles>index.php, index.html</indexFiles>
+    <autoIndex>0</autoIndex>
+  </index>
+  
+  <htAccess>
+    <allowOverride>31</allowOverride>
+    <accessFileName>.htaccess</accessFileName>
+  </htAccess>
+  
   <security>
     <accessControl>
       <allow>*</allow>
@@ -18,4 +29,9 @@
   
   <contextList>
   </contextList>
+  
+  <rewrite>
+    <enable>1</enable>
+    <logLevel>0</logLevel>
+  </rewrite>
 </virtualHostConfig>
