@@ -5,6 +5,7 @@
   "application": {
     "id": "wp-multisite-ssl-manager",
     "name": "WP Multisite SSL Manager",
+    "logo": "https://raw.githubusercontent.com/gfrino/SSL-Let-s-Encrypt-Addon-per-Jelastic/master/images/addon-icon.png",
     "categories": [
       "apps/dev-and-admin-tools"
     ],
