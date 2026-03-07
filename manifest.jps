@@ -204,13 +204,17 @@
             "name": "domain",
             "type": "string",
             "caption": "Domini (separati da virgola)",
-            "required": true
+            "required": true,
+            "regex": "^[a-z0-9]([a-z0-9\\-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9\\-]*[a-z0-9])?)*(\\s*,\\s*[a-z0-9]([a-z0-9\\-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9\\-]*[a-z0-9])?)*)*$",
+            "regexText": "✗ Formato non valido. Usa: esempio.com,www.esempio.com (senza spazi extra nei domini)"
           },
           {
             "name": "email",
             "type": "string",
             "caption": "Email per Let's Encrypt",
-            "required": true
+            "required": true,
+            "regex": "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$",
+            "regexText": "✗ Email non valida"
           }
         ]
       },
@@ -220,7 +224,9 @@
             "name": "domain",
             "type": "string",
             "caption": "Domini da rimuovere (separati da virgola)",
-            "required": true
+            "required": true,
+            "regex": "^[a-z0-9]([a-z0-9\\-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9\\-]*[a-z0-9])?)*(\\s*,\\s*[a-z0-9]([a-z0-9\\-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9\\-]*[a-z0-9])?)*)*$",
+            "regexText": "✗ Formato non valido. Usa: esempio.com,www.esempio.com (senza spazi extra)"
           }
         ]
       }
