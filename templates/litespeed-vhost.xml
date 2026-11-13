@@ -27,6 +27,13 @@
     <sslProtocol>24</sslProtocol>
   </vhssl>
   
+  <cache>
+    <storage>
+      <cacheStorePath>/var/www/webroot/.cache/vhosts/$VH_NAME</cacheStorePath>
+      <litemage>0</litemage>
+    </storage>
+  </cache>
+
   <contextList>
   </contextList>
   

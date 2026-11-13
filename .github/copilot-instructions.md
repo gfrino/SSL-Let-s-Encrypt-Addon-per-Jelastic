@@ -43,6 +43,7 @@
   - `<index>` files (index.html, index.php)
   - `<htAccess>` enabled for WordPress .htaccess
   - `<vhssl>` section with Let's Encrypt cert paths
+  - `<cache><storage><cacheStorePath>` (per-vHost LiteSpeed page cache store, `$VH_NAME` is expanded by LiteSpeed): without it the domain is never page-cached (`x-litespeed-cache: hit` never appears)
   - `<rewrite>` rules for WordPress permalinks
 - Placeholder `{DOMAIN}` is substituted via `sed` in add-domain.sh.
 

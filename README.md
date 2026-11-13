@@ -175,6 +175,7 @@ Il template [templates/litespeed-vhost.xml](templates/litespeed-vhost.xml) conti
 	•	Supporto .htaccess per WordPress
 	•	Rewrite rules per permalink
 	•	SSL/TLS settings (certificato Let's Encrypt)
+	•	Cache di pagina LiteSpeed (`<cache>` con `cacheStorePath` per vHost): senza questo blocco LiteSpeed non mette in cache le pagine del dominio e ogni richiesta passa da PHP
 	•	Docroot condiviso con WordPress Multisite
 
 **SNI (Server Name Indication)**
